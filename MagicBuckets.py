@@ -17,7 +17,7 @@ class MagicBuckets:
         self.mu: int = 2 ** log_mu
         self.mu_inv = 1/self.mu
 
-        self.p: Prime = prime(p) if p is not None else self.default_prime(n)
+        self.p: Prime = Prime(p) if p is not None else self.default_prime(n)
         self.r: int = random.randint(1, self.p.value - 1)
 
         self.bucket_functions: List[Callable[[int,int],int]]  \
@@ -47,7 +47,7 @@ class MagicBuckets:
 
     def get_bucket_value(self) -> Optional[int]:
         buckets_match = True
-        for i, bucket_function in enumerate(self.bucket_functions[1:]):
-            if bucket_function(self.magic_buckets[0]) != self.magic_buckets[i]:
+        for i, bucket_function in enumerate(self.bucket_functions[2:]):
+            if bucket_function(self.magic_buckets[0], self.magic_buckets[1] // self.magic_buckets[0]) != self.magic_buckets[i]:
                 buckets_match = False
         return self.magic_buckets[0] if buckets_match else False
