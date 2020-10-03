@@ -12,26 +12,25 @@ class Prime:
 
 
 class MagicBuckets:
-    def __init__(self, log_mu: int, p: Optional[Prime] = None, bucket_functions: List[Callable[[int, int], int]] = None):
-        self.mu: int = log_mu ** 2
+    def __init__(self, p: int = None, bucket_functions: List[Callable[[int, int], int]] = None):
 
         self.bucket_functions: List[Callable[[int,int],int]]  \
             = bucket_functions if bucket_functions is not None else self.default_bucket_functions()
 
-        self.p: Prime = p if p is not None else self.default_prime()
-        self.r: int = random.randint(1, p.value - 1)
+        self.p: Prime = prime(p) if p is not None else self.default_prime()
+        self.r: int = random.randint(1, self.p.value - 1)
 
         self.magic_buckets: List[int] = [0 for _ in range(len(self.bucket_functions))]
 
     def add(self, value: int, position: int):
         for i, magic_bucket in enumerate(self.magic_buckets):
             magic_bucket += self.bucket_functions[i](value, position)
-            magic_bucket %= self.mu
+            magic_bucket %= self.p.value
 
     def subtract(self, value: int, position: int):
         for i, magic_bucket in enumerate(self.magic_buckets):
             magic_bucket -= self.bucket_functions[i](value, position)
-            magic_bucket %= self.mu
+            magic_bucket %= self.p.value
 
     def default_bucket_functions(self) -> List[Callable[[int, int], int]]:
         a = lambda value, position: value
