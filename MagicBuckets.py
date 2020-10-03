@@ -1,6 +1,7 @@
 from typing import Callable, List, Optional
 from sympy import *
 import random
+import Hasher
 
 
 class Prime:
@@ -12,35 +13,34 @@ class Prime:
 
 
 class MagicBuckets:
-    def __init__(self, p: int = None, bucket_functions: List[Callable[[int, int], int]] = None):
+    def __init__(self, n: int, log_mu: int, p: int = None, bucket_functions: List[Callable[[int, int], int]] = None):
+        self.mu: int = 2 ** log_mu
+        self.mu_inv = 1/self.mu
+
+        self.p: Prime = prime(p) if p is not None else self.default_prime(n)
+        self.r: int = random.randint(1, self.p.value - 1)
 
         self.bucket_functions: List[Callable[[int,int],int]]  \
             = bucket_functions if bucket_functions is not None else self.default_bucket_functions()
 
-        self.p: Prime = prime(p) if p is not None else self.default_prime()
-        self.r: int = random.randint(1, self.p.value - 1)
-
         self.magic_buckets: List[int] = [0 for _ in range(len(self.bucket_functions))]
 
-    def add(self, value: int, position: int):
-        for i, magic_bucket in enumerate(self.magic_buckets):
-            magic_bucket += self.bucket_functions[i](value, position)
-            magic_bucket %= self.p.value
+        self.hasher: Hasher = Hasher.Hasher()
 
-    def subtract(self, value: int, position: int):
-        for i, magic_bucket in enumerate(self.magic_buckets):
-            magic_bucket -= self.bucket_functions[i](value, position)
-            magic_bucket %= self.p.value
+    def add(self, value: int, position: int):
+        if self.hasher.hashes_to_bucket(position, self.mu_inv):
+            for i in range(len(self.magic_buckets)):
+                self.magic_buckets[i] += self.bucket_functions[i](value, position)
+                self.magic_buckets[i] %= self.p.value
 
     def default_bucket_functions(self) -> List[Callable[[int, int], int]]:
         a = lambda value, position: value
         b = lambda value, position: value * position
-        c = lambda value, position: (value * pow(self.r, position, self.p.value)) % self.p.value
+        c = lambda value, position: (value * pow(self.r, position, self.p.value))
         return [a, b, c]
 
-    @staticmethod
-    def default_prime() -> Prime:
-        return Prime(2)
+    def default_prime(self, n) -> Prime:
+        return self.get_prime_in_range(n**2, n**3)
 
     def get_prime_in_range(self, start: int, finish: int) -> Prime:
         return Prime(randprime(start, finish))
